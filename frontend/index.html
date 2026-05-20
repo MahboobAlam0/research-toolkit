@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResearchKit AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🔬</div>
+      <span class="logo-text">ResearchKit AI</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="papers">
+        <span class="nav-icon">📚</span>
+        <span>Papers</span>
+      </button>
+      <button class="nav-item" data-view="chat">
+        <span class="nav-icon">💬</span>
+        <span>RAG Chat</span>
+      </button>
+      <button class="nav-item" data-view="synth">
+        <span class="nav-icon">🔭</span>
+        <span>Synthesize</span>
+      </button>
+      <button class="nav-item" data-view="digest">
+        <span class="nav-icon">📡</span>
+        <span>Digest</span>
+      </button>
+      <button class="nav-item" data-view="jd">
+        <span class="nav-icon">🎯</span>
+        <span>JD Analyzer</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="backend-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">Connecting…</span>
+      </div>
+      <div class="backend-url-row">
+        <input type="text" id="backendUrlInput" class="backend-url-input"
+               placeholder="http://localhost:8000" />
+        <button class="btn-connect" id="btnConnect">Connect</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <main class="main">
+
+    <!-- ── PAPERS VIEW ── -->
+    <div class="view active" id="view-papers">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Paper Library</h1>
+          <p class="view-subtitle"><span id="paperCount">0</span> papers saved</p>
+        </div>
+        <div class="view-actions">
+          <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" />
+          <button class="btn-secondary" id="btnUploadPdf">⬆ Upload PDF</button>
+          <button class="btn-secondary" id="btnRefresh">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Upload progress -->
+      <div class="upload-progress" id="uploadProgress" style="display:none">
+        <div class="upload-bar"><div class="upload-bar-fill" id="uploadBarFill"></div></div>
+        <span id="uploadLabel">Uploading…</span>
+      </div>
+
+      <!-- Papers grid -->
+      <div class="papers-grid" id="papersGrid">
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <p>No papers saved yet.<br/>
+          Install the Chrome extension to save from arXiv/PubMed,<br/>
+          or use <strong>Upload PDF</strong> above.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CHAT VIEW ── -->
+    <div class="view" id="view-chat">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">RAG Chat</h1>
+          <p class="view-subtitle">Ask questions across all your saved papers</p>
+        </div>
+        <button class="btn-secondary" id="btnClearChat">Clear</button>
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg msg-ai">
+            <div class="msg-label">⚡ ResearchKit AI</div>
+            <p>Ask me anything about your saved papers. I'll search across all of them and cite my sources.</p>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <textarea id="chatInput" class="chat-textarea"
+                    placeholder="Ask a question about your papers…" rows="1"></textarea>
+          <button class="btn-send" id="btnSend">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SYNTHESIS VIEW ── -->
+    <div class="view" id="view-synth">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Literature Synthesis</h1>
+          <p class="view-subtitle">Synthesize insights, detect contradictions, find research gaps</p>
+        </div>
+      </div>
+
+      <div class="synth-layout">
+        <div class="synth-form-card">
+          <label class="field-label">Research Question</label>
+          <textarea id="synthQuestion" class="field-textarea"
+            placeholder="e.g. How do diffusion models compare to GANs for image generation?"
+            rows="3"></textarea>
+          <div class="field-row">
+            <label class="field-label" style="margin:0">Depth (chunks)</label>
+            <select id="synthTopK" class="field-select">
+              <option value="10">Quick (10 chunks)</option>
+              <option value="15" selected>Standard (15 chunks)</option>
+              <option value="25">Deep (25 chunks)</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="btnSynthesize">Synthesize Literature →</button>
+        </div>
+
+        <div class="synth-results" id="synthResults" style="display:none">
+          <div class="result-card">
+            <div class="result-card-header" style="color:var(--cyan)">📖 Synthesis</div>
+            <p class="synth-text" id="synthText"></p>
+          </div>
+          <div class="result-card" id="contradCard">
+            <div class="result-card-header" style="color:#f59e0b">⚡ Contradictions</div>
+            <div id="synthContrad"></div>
+          </div>
+          <div class="result-card">
+            <div class="result-card-header" style="color:#a78bfa">🔭 Research Gaps</div>
+            <div id="synthGaps"></div>
+          </div>
+          <div class="result-card">
+            <div class="result-card-header" style="color:var(--text-3)">📎 Sources</div>
+            <div id="synthSources"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DIGEST VIEW ── -->
+    <div class="view" id="view-digest">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">ArXiv Digest</h1>
+          <p class="view-subtitle">New papers ranked by relevance to your library</p>
+        </div>
+      </div>
+
+      <div class="digest-layout">
+        <div class="digest-sidebar-panel">
+          <label class="field-label">Your Interests</label>
+          <div class="interest-input-row">
+            <input type="text" id="interestInput" class="field-input"
+                   placeholder="e.g. diffusion models" maxlength="80" />
+            <button class="btn-secondary" id="btnAddInterest">+ Add</button>
+          </div>
+          <div class="interest-tags" id="interestTags">
+            <span class="no-tags">No interests yet</span>
+          </div>
+
+          <label class="field-label" style="margin-top:16px">Time window</label>
+          <select class="field-select" id="digestDays">
+            <option value="1">Last 24 hours</option>
+            <option value="3" selected>Last 3 days</option>
+            <option value="7">Last 7 days</option>
+          </select>
+
+          <button class="btn-primary" id="btnFetchDigest" style="margin-top:12px">
+            Check New Papers →
+          </button>
+
+          <p class="digest-meta" id="digestMeta"></p>
+        </div>
+
+        <div class="digest-results-panel">
+          <div id="digestResults" class="digest-results">
+            <div class="empty-state">
+              <div class="empty-icon">📡</div>
+              <p>Add interests and click<br/><strong>Check New Papers</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── JD ANALYZER VIEW ── -->
+    <div class="view" id="view-jd">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">JD Skill-Gap Analyzer</h1>
+          <p class="view-subtitle">Match your resume to a job description instantly</p>
+        </div>
+      </div>
+
+      <div class="jd-layout">
+        <div class="jd-inputs">
+          <div class="field-group">
+            <label class="field-label">Job Description</label>
+            <textarea id="jdText" class="field-textarea"
+              placeholder="Paste the full job description here…" rows="10"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Your Resume</label>
+            <textarea id="resumeText" class="field-textarea"
+              placeholder="Paste your resume text here…" rows="10"></textarea>
+          </div>
+          <button class="btn-primary" id="btnAnalyze">Analyze Skill Gap →</button>
+        </div>
+
+        <div class="jd-results" id="jdResults" style="display:none">
+          <div class="score-card">
+            <div class="score-ring" id="scoreRing">
+              <span class="score-number" id="scoreNum">–</span>
+            </div>
+            <p class="score-label">Match Score</p>
+            <p class="score-summary" id="scoreSummary"></p>
+          </div>
+
+          <div class="result-card">
+            <div class="result-card-header" style="color:#34d399">✅ Skills You Have</div>
+            <div id="matchedSkills" class="skills-wrap"></div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-card-header" style="color:#f87171">❌ Skill Gaps</div>
+            <div id="missingSkills" class="skills-wrap"></div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-card-header" style="color:var(--cyan)">💡 Action Plan</div>
+            <div id="suggestions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

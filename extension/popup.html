@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResearchKit AI</title>
+  <link rel="stylesheet" href="css/popup.css" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">🔬</div>
+        <span class="logo-text">ResearchKit AI</span>
+      </div>
+      <div id="statusDot" class="status-dot" title="Backend offline"></div>
+    </div>
+
+    <!-- Tabs — 4 tabs -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="papers">
+        <span class="tab-icon">📚</span> Papers
+      </button>
+      <button class="tab" data-tab="chat">
+        <span class="tab-icon">💬</span> Chat
+      </button>
+      <button class="tab" data-tab="digest">
+        <span class="tab-icon">📡</span> Digest
+      </button>
+      <button class="tab" data-tab="jd">
+        <span class="tab-icon">🎯</span> JD
+      </button>
+    </nav>
+  </header>
+
+  <!-- ── Panels ── -->
+  <div class="panels">
+
+    <!-- ═══ PAPERS PANEL ═══ -->
+    <div class="panel active" id="panel-papers">
+      <div class="papers-toolbar">
+        <span class="papers-count"><span id="paperCount">0</span> papers</span>
+        <div class="toolbar-actions">
+          <!-- Hidden file input for PDF upload -->
+          <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" />
+          <button class="btn-sm btn-upload" id="btnUploadPdf" title="Upload a PDF">⬆ PDF</button>
+          <button class="btn-sm" id="btnRefreshPapers">↻</button>
+        </div>
+      </div>
+
+      <!-- PDF upload progress bar (hidden by default) -->
+      <div class="upload-bar" id="uploadBar">
+        <div class="upload-bar-inner" id="uploadBarInner"></div>
+        <span class="upload-bar-label" id="uploadBarLabel">Uploading…</span>
+      </div>
+
+      <div class="scroll-area" id="papersList">
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <p>No papers saved yet.<br/>
+          Visit <strong>arXiv</strong>, <strong>PubMed</strong>, or <strong>Semantic Scholar</strong>
+          and click <strong>Save to ResearchKit</strong> — or click <strong>⬆ PDF</strong> above.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CHAT / SYNTHESIS PANEL ═══ -->
+    <div class="panel" id="panel-chat">
+
+      <!-- Mode toggle -->
+      <div class="chat-mode-bar">
+        <button class="mode-btn active" id="btnModeChat" data-mode="chat">💬 RAG Chat</button>
+        <button class="mode-btn" id="btnModeSynth" data-mode="synth">🔭 Synthesize</button>
+      </div>
+
+      <!-- ── RAG Chat view ── -->
+      <div id="chatView" class="chat-view">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg msg-ai">
+            <div class="msg-label">⚡ ResearchKit AI</div>
+            Ask me anything about your saved papers. I'll search across all of them and cite my sources.
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Ask about your papers…" rows="1"></textarea>
+          <button class="btn-send" id="btnSend" title="Send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Synthesis view ── -->
+      <div id="synthView" class="synth-view" style="display:none">
+        <div class="synth-form">
+          <div class="field-label">Research Question</div>
+          <textarea class="rk-textarea" id="synthQuestion"
+            placeholder="e.g. How do diffusion models compare to GANs for image generation?"
+            rows="3"></textarea>
+          <button class="btn-primary" id="btnSynthesize">Synthesize Literature →</button>
+        </div>
+
+        <div class="synth-results" id="synthResults" style="display:none">
+
+          <div class="section-card">
+            <div class="section-title" style="color:var(--cyan)">📖 Synthesis</div>
+            <p class="synth-text" id="synthText"></p>
+          </div>
+
+          <div class="section-card" id="synthContradCard">
+            <div class="section-title" style="color:#f59e0b">⚡ Contradictions</div>
+            <div id="synthContrad"></div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title" style="color:#a78bfa">🔭 Research Gaps</div>
+            <div id="synthGaps"></div>
+          </div>
+
+          <div class="section-card" id="synthSourcesCard">
+            <div class="section-title" style="color:var(--text-3)">📎 Sources</div>
+            <div id="synthSources"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DIGEST PANEL ═══ -->
+    <div class="panel" id="panel-digest">
+      <div class="digest-inner">
+
+        <div class="digest-header">
+          <div class="field-label">Your Research Interests</div>
+          <p class="digest-hint">ResearchKit fetches new arXiv papers for these topics and ranks
+          them by relevance to your saved library.</p>
+        </div>
+
+        <div class="interest-row">
+          <input type="text" id="interestInput" class="interest-input"
+                 placeholder="e.g. diffusion models" maxlength="80" />
+          <button class="btn-sm btn-add-interest" id="btnAddInterest">+ Add</button>
+        </div>
+
+        <div class="interest-tags" id="interestTags">
+          <span class="no-interests">No interests added yet.</span>
+        </div>
+
+        <div class="digest-controls">
+          <select class="digest-select" id="digestDays">
+            <option value="1">Last 24 h</option>
+            <option value="3" selected>Last 3 days</option>
+            <option value="7">Last 7 days</option>
+          </select>
+          <button class="btn-primary" id="btnFetchDigest">Check New Papers →</button>
+        </div>
+
+        <div class="digest-meta" id="digestMeta" style="display:none"></div>
+        <div class="scroll-area digest-results" id="digestResults"></div>
+
+      </div>
+    </div>
+
+    <!-- ═══ JD ANALYZER PANEL ═══ -->
+    <div class="panel" id="panel-jd">
+      <div class="jd-panel-inner" id="jdInner">
+
+        <div>
+          <div class="field-label">Job Description</div>
+          <textarea class="rk-textarea" id="jdText"
+            placeholder="Paste the full job description here…" rows="6"></textarea>
+        </div>
+
+        <div>
+          <div class="field-label">Your Resume (optional)</div>
+          <textarea class="rk-textarea" id="resumeText"
+            placeholder="Paste your resume, or leave blank to use stored resume…" rows="4"></textarea>
+        </div>
+
+        <button class="btn-primary" id="btnAnalyze">Analyze Skill Gap →</button>
+
+        <!-- Results -->
+        <div class="jd-results" id="jdResults">
+          <div class="score-card">
+            <div class="score-ring" id="scoreRing" style="--pct: 0%">
+              <span class="score-number" id="scoreNum">–</span>
+            </div>
+            <div class="score-label">Match Score</div>
+          </div>
+          <div class="section-card">
+            <div class="section-title" style="color:#34d399">✅ Skills You Have</div>
+            <div id="matchedSkills">–</div>
+          </div>
+          <div class="section-card">
+            <div class="section-title" style="color:#f87171">❌ Skill Gaps</div>
+            <div id="missingSkills">–</div>
+          </div>
+          <div class="section-card">
+            <div class="section-title" style="color:var(--cyan)">💡 Action Plan</div>
+            <div id="suggestions">–</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end .panels -->
+
+  <script src="js/popup.js"></script>
+</body>
+</html>

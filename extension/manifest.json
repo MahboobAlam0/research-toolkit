@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "ResearchKit AI",
+  "version": "1.1.0",
+  "description": "AI-powered researcher toolkit — RAG over your saved papers + JD skill-gap analyzer. Requires a ResearchKit backend (self-hosted or cloud).",
+
+  "permissions": ["activeTab", "storage", "scripting", "tabs", "notifications"],
+
+  "host_permissions": [
+    "https://arxiv.org/*",
+    "https://pubmed.ncbi.nlm.nih.gov/*",
+    "https://www.semanticscholar.org/*",
+    "http://localhost:8000/*"
+  ],
+
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "background": {
+    "service_worker": "js/background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://arxiv.org/abs/*",
+        "https://pubmed.ncbi.nlm.nih.gov/*",
+        "https://www.semanticscholar.org/paper/*"
+      ],
+      "js": ["js/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResearchKit AI — Settings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #0d0f14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .card {
+      background: #161b27;
+      border: 1px solid #1e2a3a;
+      border-radius: 16px;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #00d4ff, #7c3aed);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    h1 { font-size: 20px; font-weight: 700; color: #f1f5f9; }
+    p.subtitle { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+    .section { margin-top: 28px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.04em; }
+
+    input[type="url"], input[type="text"] {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #1e2a3a;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #00d4ff; }
+
+    .hint { font-size: 12px; color: #475569; margin-top: 6px; line-height: 1.5; }
+    .hint code { background: #0d1117; border-radius: 4px; padding: 1px 5px; font-family: monospace; }
+
+    .actions { display: flex; gap: 10px; margin-top: 24px; }
+
+    button {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+
+    #btnSave   { background: linear-gradient(135deg, #00d4ff, #7c3aed); color: #fff; }
+    #btnTest   { background: #1e2a3a; color: #94a3b8; border: 1px solid #263347; }
+    #btnReset  { background: transparent; color: #ef4444; border: 1px solid #3b1c1c; flex: 0; padding: 10px 16px; }
+
+    .status-bar {
+      margin-top: 20px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+    .status-bar.show { display: block; }
+    .status-bar.ok   { background: #0d2318; color: #34d399; border: 1px solid #065f46; }
+    .status-bar.err  { background: #1f0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+    .status-bar.info { background: #0d1b2a; color: #60a5fa; border: 1px solid #1e3a5f; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🔬</div>
+      <div>
+        <h1>ResearchKit AI</h1>
+        <p class="subtitle">Extension Settings</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <label for="backendUrl">BACKEND URL</label>
+      <input
+        type="text"
+        id="backendUrl"
+        placeholder="http://localhost:8000"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <p class="hint">
+        Default: <code>http://localhost:8000</code> (Docker on this machine).<br />
+        Change this to your deployed backend, e.g. <code>https://my-app.railway.app</code>.
+      </p>
+    </div>
+
+    <div class="actions">
+      <button id="btnSave">Save</button>
+      <button id="btnTest">Test connection</button>
+      <button id="btnReset">Reset</button>
+    </div>
+
+    <div class="status-bar" id="statusBar"></div>
+  </div>
+
+  <script src="js/options.js"></script>
+</body>
+</html>
