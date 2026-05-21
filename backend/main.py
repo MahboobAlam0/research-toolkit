@@ -32,8 +32,13 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("ResearchKit AI backend starting…")
-    from services.embedder import get_model
-    get_model()
+    # Warm the model in a thread so uvicorn starts accepting requests
+    # (including /api/health) immediately — critical for Railway health checks
+    import asyncio, concurrent.futures
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        from services.embedder import get_model
+        await loop.run_in_executor(pool, get_model)
     logger.info("Embedding model loaded.")
     yield
     logger.info("Shutting down.")
@@ -78,6 +83,8 @@ app.include_router(digest_router)
 # ── Health check ───────────────────────────────────────────────────────────────
 @app.get("/api/health", tags=["system"])
 async def health():
+    # Intentionally lightweight — no DB or model calls
+    # so this responds instantly even during model warm-up
     return {"status": "ok", "service": "ResearchKit AI", "version": app.version}
 
 
