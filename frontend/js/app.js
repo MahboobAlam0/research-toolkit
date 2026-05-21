@@ -2,7 +2,7 @@
 "use strict";
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const DEFAULT_BACKEND = "http://localhost:8000";
+const DEFAULT_BACKEND = "https://research-toolkit-production.up.railway.app";
 let API = `${localStorage.getItem("backendUrl") || DEFAULT_BACKEND}/api`;
 
 // ── State ─────────────────────────────────────────────────────────────────────
