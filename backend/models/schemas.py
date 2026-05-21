@@ -16,13 +16,19 @@ class PaperIngest(BaseModel):
 
 
 class PaperRecord(BaseModel):
-    id:       str
-    title:    str
-    authors:  List[str]
-    url:      str
-    source:   str
-    paper_id: str
-    saved_at: str
+    id:              str
+    title:           str
+    authors:         List[str]
+    url:             str
+    source:          str
+    paper_id:        str
+    saved_at:        str
+    year:            str = ""
+    venue:           str = ""
+    tags_task:       str = ""
+    tags_methods:    List[str] = []
+    tags_datasets:   List[str] = []
+    tags_key_result: str = ""
 
 
 class ChatMessage(BaseModel):

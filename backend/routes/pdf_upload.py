@@ -91,6 +91,10 @@ async def upload_pdf(file: UploadFile = File(...)):
         extracted.title[:60], extracted.num_pages, extracted.word_count, len(chunks),
     )
 
+    import asyncio
+    from services.paper_tagger import tag_paper
+    asyncio.create_task(tag_paper(doc_id, extracted.title, extracted.abstract))
+
     return {
         "status":  "ok",
         "doc_id":  doc_id,

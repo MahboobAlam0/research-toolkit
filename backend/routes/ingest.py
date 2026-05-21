@@ -139,6 +139,12 @@ async def ingest_paper(paper: PaperIngest):
 
     await client.upsert(collection_name=COLLECTION, points=points)
     logger.info("Ingested paper '%s' (%d chunks).", paper.title[:60], len(chunks))
+
+    # Auto-tag in background — doesn't slow down the save response
+    import asyncio
+    from services.paper_tagger import tag_paper
+    asyncio.create_task(tag_paper(doc_id, paper.title, paper.abstract))
+
     return {"status": "ok", "doc_id": doc_id, "chunks": len(chunks)}
 
 
@@ -173,6 +179,12 @@ async def list_papers():
                         source=p.get("source", ""),
                         paper_id=p.get("paper_id", ""),
                         saved_at=p.get("saved_at", ""),
+                        year=p.get("year", ""),
+                        venue=p.get("venue", ""),
+                        tags_task=p.get("tags_task", ""),
+                        tags_methods=p.get("tags_methods", []),
+                        tags_datasets=p.get("tags_datasets", []),
+                        tags_key_result=p.get("tags_key_result", ""),
                     )
                 )
         if next_offset is None:

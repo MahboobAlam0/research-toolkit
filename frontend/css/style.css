@@ -317,6 +317,7 @@ body { display: flex; }
 .badge-pubmed       { background: rgba(16,185,129,0.15);  color: #34d399; }
 .badge-semantic_scholar { background: rgba(124,58,237,0.15); color: #a78bfa; }
 .badge-pdf_upload   { background: rgba(245,158,11,0.15);  color: #fbbf24; }
+.badge-bibtex       { background: rgba(99,102,241,0.15);  color: #818cf8; }
 
 .paper-title {
   font-size: 13px;
@@ -334,6 +335,29 @@ body { display: flex; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.paper-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.paper-venue {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: auto;
+}
+.paper-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.tag-task    { background: rgba(0,212,255,0.12); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
+.tag-method  { background: rgba(124,58,237,0.12); color: #a78bfa;   border: 1px solid rgba(124,58,237,0.2); }
+.tag-dataset { background: rgba(16,185,129,0.12); color: #34d399;   border: 1px solid rgba(16,185,129,0.2); }
+.paper-result {
+  font-size: 11px; color: var(--text-3); margin-top: 4px;
+  font-style: italic; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
 }
 .paper-actions {
   display: flex;

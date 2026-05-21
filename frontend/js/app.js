@@ -90,6 +90,10 @@ function setupPapers() {
     document.getElementById("pdfFileInput").click();
   });
   document.getElementById("pdfFileInput").addEventListener("change", handlePdfUpload);
+  document.getElementById("btnImportBib").addEventListener("click", () => {
+    document.getElementById("bibFileInput").click();
+  });
+  document.getElementById("bibFileInput").addEventListener("change", handleBibImport);
 }
 
 async function loadPapers() {
@@ -116,17 +120,32 @@ function renderPapers() {
       to save from arXiv / PubMed / Semantic Scholar.</p></div>`;
     return;
   }
-  grid.innerHTML = papers.map((p) => `
-    <div class="paper-card">
-      <span class="paper-source-badge badge-${p.source}">${p.source.replace(/_/g," ")}</span>
+  grid.innerHTML = papers.map((p) => {
+    const methods  = (p.tags_methods  || []).map(m => `<span class="tag tag-method">${esc(m)}</span>`).join("");
+    const datasets = (p.tags_datasets || []).map(d => `<span class="tag tag-dataset">${esc(d)}</span>`).join("");
+    const task     = p.tags_task ? `<span class="tag tag-task">${esc(p.tags_task)}</span>` : "";
+    const venue    = p.venue ? `<span class="paper-venue">${esc(p.venue)}${p.year ? " · "+p.year : ""}</span>` : "";
+    const tagsHtml = (task || methods || datasets)
+      ? `<div class="paper-tags">${task}${methods}${datasets}</div>` : "";
+    const resultHtml = p.tags_key_result
+      ? `<div class="paper-result">${esc(p.tags_key_result)}</div>` : "";
+
+    return `<div class="paper-card">
+      <div class="paper-card-top">
+        <span class="paper-source-badge badge-${p.source}">${p.source.replace(/_/g," ")}</span>
+        ${venue}
+      </div>
       <div class="paper-title">${esc(p.title)}</div>
       <div class="paper-authors">${esc((p.authors||[]).join(", ") || "Unknown authors")}</div>
+      ${tagsHtml}
+      ${resultHtml}
       <div class="paper-actions">
         <button class="btn-chip ask" onclick="askPaper('${esc(p.title.substring(0,60))}')">💬 Ask</button>
         <a class="btn-chip" href="${p.url}" target="_blank" rel="noopener">🔗 Open</a>
         <button class="btn-chip delete" onclick="deletePaper('${p.id}')">🗑 Delete</button>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 async function deletePaper(id) {
@@ -182,6 +201,47 @@ async function handlePdfUpload() {
     barFill.style.width = "0%";
     barFill.style.background = "";
   }, 3000);
+}
+
+async function handleBibImport() {
+  const file = document.getElementById("bibFileInput").files[0];
+  if (!file) return;
+  document.getElementById("bibFileInput").value = "";
+
+  const progress = document.getElementById("uploadProgress");
+  const barFill  = document.getElementById("uploadBarFill");
+  const label    = document.getElementById("uploadLabel");
+
+  progress.style.display = "flex";
+  barFill.style.width    = "20%";
+  label.textContent      = `Parsing ${file.name}…`;
+
+  const form = new FormData();
+  form.append("file", file);
+
+  try {
+    barFill.style.width = "60%";
+    label.textContent   = "Importing entries…";
+    const r = await fetch(`${API}/papers/import-bibtex`, { method: "POST", body: form });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || `HTTP ${r.status}`);
+    }
+    const data = await r.json();
+    barFill.style.width = "100%";
+    label.textContent   = `✓ Imported ${data.imported} papers · ${data.duplicates} duplicates · ${data.skipped} skipped`;
+    await loadPapers();
+    toast(`Imported ${data.imported} papers from ${file.name}`, "success");
+  } catch (err) {
+    barFill.style.background = "#ef4444";
+    label.textContent = `✕ ${err.message}`;
+  }
+
+  setTimeout(() => {
+    progress.style.display  = "none";
+    barFill.style.width     = "0%";
+    barFill.style.background = "";
+  }, 4000);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

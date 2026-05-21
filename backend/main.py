@@ -12,13 +12,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.ingest      import router as ingest_router
-from routes.pdf_upload  import router as pdf_router
-from routes.query       import router as query_router
-from routes.search      import router as search_router
-from routes.synthesize  import router as synthesize_router
-from routes.jd_analyzer import router as jd_router
-from routes.digest      import router as digest_router
+from routes.ingest         import router as ingest_router
+from routes.pdf_upload     import router as pdf_router
+from routes.bibtex_import  import router as bibtex_router
+from routes.query          import router as query_router
+from routes.search         import router as search_router
+from routes.synthesize     import router as synthesize_router
+from routes.jd_analyzer    import router as jd_router
+from routes.digest         import router as digest_router
 
 load_dotenv()
 
@@ -79,6 +80,7 @@ app.add_middleware(
 # ── Routers ────────────────────────────────────────────────────────────────────
 app.include_router(ingest_router)
 app.include_router(pdf_router)
+app.include_router(bibtex_router)
 app.include_router(search_router)
 app.include_router(synthesize_router)
 app.include_router(query_router)
