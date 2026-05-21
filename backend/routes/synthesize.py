@@ -36,7 +36,7 @@ _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*|\s*```")
 class SynthesisRequest(BaseModel):
     question: str = Field(..., min_length=5, max_length=500,
                           description="Research question to synthesize literature around")
-    top_k:    int = Field(default=8, ge=3, le=20,
+    top_k:    int = Field(default=8, ge=3, le=30,
                           description="Number of paper chunks to retrieve")
 
 
