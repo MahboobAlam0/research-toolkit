@@ -29,17 +29,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("ResearchKit AI backend starting…")
-    # Warm the model in a thread so uvicorn starts accepting requests
-    # (including /api/health) immediately — critical for Railway health checks
+async def _load_model_background():
+    """Load the embedding model without blocking uvicorn startup."""
     import asyncio, concurrent.futures
     loop = asyncio.get_event_loop()
-    with concurrent.futures.ThreadPoolExecutor() as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
         from services.embedder import get_model
         await loop.run_in_executor(pool, get_model)
     logger.info("Embedding model loaded.")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("ResearchKit AI backend starting…")
+    # Start model loading in background so uvicorn binds to PORT immediately.
+    # /api/health responds before the model is ready — Railway won't time out.
+    import asyncio
+    asyncio.create_task(_load_model_background())
     yield
     logger.info("Shutting down.")
 
