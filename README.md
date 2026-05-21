@@ -2,7 +2,7 @@
 
 # 🔬 ResearchKit AI
 
-### AI-powered researcher toolkit — RAG over your paper library, literature synthesis, arXiv digest & JD skill-gap analyzer
+### The private, self-hosted research intelligence platform for ML PhD students entering industry
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -21,43 +21,62 @@
 
 ---
 
-## The Problem
+## Who It's For & Why It Exists
 
-Researchers and ML practitioners face three painful daily realities:
+**Target user: ML/DS PhD students and researchers entering industry.**
 
-| Pain | Reality |
-|------|---------|
-| **Literature overload** | 200+ ML papers land on arXiv every day. Important work gets missed. |
-| **Shallow search** | Keyword search returns titles — not answers. Reading 20 papers to answer one question takes hours. |
-| **Job hunting friction** | Matching your skills to a JD by hand is slow, subjective, and demotivating. |
+They are doing two things simultaneously — conducting research and job-hunting. No single tool serves both. More importantly, existing research tools have a critical flaw: **they send your unpublished work to their servers.**
 
-**ResearchKit AI solves all three** — a unified toolkit that sits in your browser and gives you a research assistant, a literature analyst, and a career advisor in one place.
+| Tool | What it does | Why it falls short |
+|------|-------------|-------------------|
+| Zotero / Mendeley | Paper storage | Zero AI — can't ask questions across your library |
+| Elicit / Consensus | AI over the web | Cloud-only, sends your papers to their servers, subscription |
+| ChatPDF | Chat with a PDF | One paper at a time, no cross-library synthesis |
+| Semantic Scholar | Paper discovery | No personal library, no Q&A |
+| Perplexity | General AI search | Not grounded in your specific saved papers |
+
+**ResearchKit is the only tool that:**
+1. **Runs on your own infrastructure** — your unpublished research never leaves your machine (or your private cloud)
+2. **Imports your existing Zotero library in one click** (BibTeX) — zero re-entry
+3. **Auto-tags every paper** with task, methods, datasets, and key result — making your library a structured research database, not just a pile of PDFs
+4. **Ranks new arXiv papers by relevance to YOUR library** — using what you've already read as an implicit interest profile
+5. **Generates cited literature syntheses** with contradiction detection and research gap identification
+6. **Analyzes skill gaps** against job descriptions using the same embedding pipeline — because the same person needs both features
 
 ---
 
 ## ✨ Features
 
-### 📚 RAG Chat over Your Paper Library
-Save papers from arXiv, PubMed, or Semantic Scholar with one click. Ask natural-language questions across your entire library. Answers are grounded in your papers with inline citations — no hallucination, no guessing.
+### 📚 Import Your Entire Zotero / Mendeley Library in One Click
+Export your existing reference manager as a `.bib` file. ResearchKit parses it, chunks every paper, embeds it, and indexes it — your full research history becomes queryable in seconds. Works with any BibTeX export.
+
+### 🏷 AI Auto-Tagging on Every Save
+Every paper ingested (web scrape, PDF, or BibTeX) is automatically tagged by the LLM with:
+- **Task** — the research problem (e.g. "long-context reasoning")
+- **Methods** — key techniques (e.g. "RoPE", "flash attention", "LoRA")
+- **Datasets** — benchmarks used (e.g. "MMLU", "HumanEval")
+- **Key result** — the most important finding in one sentence
+
+Tags appear on paper cards and make your library a structured research database — not just a pile of saved links.
+
+### 💬 RAG Chat over Your Private Library
+Ask natural-language questions across your entire paper collection. Answers are grounded in your specific papers with inline `[1]`, `[2]` citations — no hallucination, no generic web answers.
 
 ### 📄 Full PDF Upload & Indexing
-Upload any PDF directly. The full text is extracted with PyMuPDF, chunked, and embedded — not just the abstract. Deeper retrieval, richer answers.
+Upload any PDF — including papers behind paywalls or unpublished preprints. Full text is extracted with PyMuPDF (not just the abstract), chunked with overlap, and embedded for deep retrieval.
 
-### 🔭 Literature Synthesis & Gap Detection
-Given a research question, ResearchKit retrieves the most relevant chunks from your library and generates — in a single LLM call:
-- A **cited synthesis paragraph** summarising the field
-- **Contradictions** between papers ("Paper [2] claims 94% accuracy; Paper [5] disputes this on the same benchmark")
-- **Research gaps** — what the literature hasn't addressed yet
+### 🔭 Literature Synthesis + Contradiction Detection + Research Gaps
+Given a research question, ResearchKit retrieves the top-k chunks and generates — in a single LLM call — a cited synthesis paragraph, specific contradictions between papers, and concrete research gaps. Draft a literature review section in seconds instead of days.
 
-### 📡 ArXiv Daily Digest
-Tell ResearchKit your interests. It fetches today's arXiv papers, embeds each abstract, and scores it against your saved library using cosine similarity. You see a ranked list of papers you'd actually care about — no noise.
+### 📡 ArXiv Digest Ranked by YOUR Library
+Your saved papers act as an implicit interest profile. ResearchKit fetches today's arXiv papers, embeds each abstract, and ranks them by cosine similarity to your library. You see papers you'd actually care about — no noise, no keyword tuning.
 
 ### 🎯 JD Skill-Gap Analyzer
-Paste a job description and your resume. The LLM extracts skills from both, matches them semantically (not keyword-by-keyword), and returns a match score, a gap analysis, and a concrete action plan.
+The same embedding pipeline that powers paper retrieval also powers career intelligence. Paste a JD and your resume — the LLM extracts skills from both, semantic matching surfaces gaps, and a 4-step action plan tells you exactly what to learn next.
 
-### 🌐 Dual Interface
-- **Chrome Extension** (MV3) — save papers directly from arXiv/PubMed/Semantic Scholar pages
-- **Web Frontend** — full-page UI running on port 3000, accessible from any browser
+### 🌐 Dual Interface — Extension + Web
+- **Chrome Extension** (MV3) — one-click save from arXiv, PubMed, Semantic Scholar
+- **Web Frontend** — full-page dashboard at `localhost:3000` or GitHub Pages
 
 ---
 
