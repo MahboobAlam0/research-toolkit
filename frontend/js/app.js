@@ -6,8 +6,9 @@ const DEFAULT_BACKEND = "https://research-toolkit-production.up.railway.app";
 let API = `${localStorage.getItem("backendUrl") || DEFAULT_BACKEND}/api`;
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let papers      = [];
-let chatHistory = [];
+let papers        = [];
+let chatHistory   = [];
+let digestPapers  = [];   // indexed by position for safe onclick lookup
 let interests   = JSON.parse(localStorage.getItem("interests") || "[]");
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
@@ -414,11 +415,13 @@ function renderDigest(data) {
     return;
   }
 
-  results.innerHTML = data.papers.map((p) => {
-    const pct       = Math.round(p.relevance_score * 100);
-    const cls       = pct >= 70 ? "score-high" : pct >= 40 ? "score-medium" : "score-low";
-    const dateStr   = p.published ? new Date(p.published).toLocaleDateString() : "";
-    const paperJson = esc(JSON.stringify(p));
+  // Store papers in module array — buttons reference by index, never embed JSON in onclick
+  digestPapers = data.papers;
+
+  results.innerHTML = data.papers.map((p, i) => {
+    const pct     = Math.round(p.relevance_score * 100);
+    const cls     = pct >= 70 ? "score-high" : pct >= 40 ? "score-medium" : "score-low";
+    const dateStr = p.published ? new Date(p.published).toLocaleDateString() : "";
 
     return `<div class="digest-card">
       <div class="digest-card-top">
@@ -428,15 +431,23 @@ function renderDigest(data) {
       <span class="digest-interest">${esc(p.matched_interest)}</span>
       <div class="digest-abstract">${esc(p.abstract.substring(0, 200))}…</div>
       <div class="digest-actions">
-        <button class="btn-chip" onclick='saveDigestPaper(${paperJson})'>💾 Save</button>
-        <a class="btn-chip" href="${p.url}" target="_blank" rel="noopener">🔗 Open</a>
+        <button class="btn-chip" data-digest-idx="${i}">💾 Save</button>
+        <a class="btn-chip" href="${esc(p.url)}" target="_blank" rel="noopener">🔗 Open</a>
         <span class="digest-date">${dateStr}</span>
       </div>
     </div>`;
   }).join("");
+
+  // Single delegated listener — handles all Save buttons safely
+  results.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-digest-idx]");
+    if (!btn) return;
+    saveDigestPaper(digestPapers[parseInt(btn.dataset.digestIdx)], btn);
+  }, { once: true });
 }
 
-async function saveDigestPaper(paper) {
+async function saveDigestPaper(paper, btn) {
+  if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
   try {
     const r = await fetch(`${API}/papers/ingest`, {
       method: "POST",
@@ -449,10 +460,17 @@ async function saveDigestPaper(paper) {
     });
     if (!r.ok) throw new Error();
     const data = await r.json();
-    if (data.status === "duplicate") { toast("Already in library.", "error"); return; }
+    if (data.status === "duplicate") {
+      if (btn) { btn.textContent = "Already saved"; }
+      toast("Already in library.", "error"); return;
+    }
+    if (btn) { btn.textContent = "✓ Saved"; }
     await loadPapers();
     toast(`Saved "${paper.title.substring(0,40)}…"`, "success");
-  } catch { toast("Could not save paper.", "error"); }
+  } catch {
+    if (btn) { btn.textContent = "✕ Failed"; btn.disabled = false; }
+    toast("Could not save paper.", "error");
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
