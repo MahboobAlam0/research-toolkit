@@ -402,6 +402,13 @@ function setupDigest() {
   const input  = document.getElementById("interestInput");
   const btnAdd = document.getElementById("btnAddInterest");
 
+  // Persistent delegated listener — set up once, handles all Save buttons
+  document.getElementById("digestResults").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-digest-idx]");
+    if (!btn || btn.disabled) return;
+    saveDigestPaper(digestPapers[parseInt(btn.dataset.digestIdx)], btn);
+  });
+
   const add = () => {
     const val = input.value.trim().toLowerCase();
     if (!val || interests.includes(val) || interests.length >= 10) return;
@@ -498,12 +505,7 @@ function renderDigest(data) {
     </div>`;
   }).join("");
 
-  // Single delegated listener — handles all Save buttons safely
-  results.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-digest-idx]");
-    if (!btn) return;
-    saveDigestPaper(digestPapers[parseInt(btn.dataset.digestIdx)], btn);
-  }, { once: true });
+  // Listener is on the container (set up in setupDigest) — nothing needed here
 }
 
 async function saveDigestPaper(paper, btn) {
