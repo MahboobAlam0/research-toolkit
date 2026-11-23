@@ -79,8 +79,13 @@ async def ensure_collection(client: AsyncQdrantClient):
     _collection_ready = True
 
 
-def chunk_text(text: str, chunk_size: int = 512, overlap: int = 64) -> List[str]:
-    """Split text into overlapping chunks by word count."""
+def chunk_text(text: str, chunk_size: int = 300, overlap: int = 40) -> List[str]:
+    """Split text into overlapping chunks by word count.
+
+    The default stays well under bge-base-en-v1.5's 512-token input limit:
+    English text averages more than one token per word, so a 512-word chunk
+    would be silently truncated and its tail never embedded.
+    """
     words  = text.split()
     chunks = []
     start  = 0

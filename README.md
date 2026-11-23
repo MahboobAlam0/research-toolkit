@@ -10,7 +10,7 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-Vector_DB-DC143C)](https://qdrant.tech)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036)](https://groq.com)
 [![Chrome](https://img.shields.io/badge/Chrome-Extension_MV3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions)
-[![Tests](https://img.shields.io/badge/Tests-33_passing-brightgreen?logo=pytest)](backend/tests/)
+[![Tests](https://img.shields.io/badge/Tests-35_pytest_tests-blue?logo=pytest)](backend/tests/)
 [![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
 
 **Built by [Mahboob Alam](https://github.com/MahboobAlam0) · M.Tech Data Science · DIAT-DU Pune**
@@ -36,12 +36,22 @@ They are doing two things simultaneously — conducting research and job-hunting
 | Perplexity | General AI search | Not grounded in your specific saved papers |
 
 **ResearchKit is the only tool that:**
-1. **Runs on your own infrastructure** — your unpublished research never leaves your machine (or your private cloud)
+1. **Runs on your own infrastructure** — the paper library, embeddings and vector index stay on your machine (or your own cloud), and only the text listed under [What leaves your machine](#-what-leaves-your-machine) is sent to the LLM API
 2. **Imports your existing Zotero library in one click** (BibTeX) — zero re-entry
 3. **Auto-tags every paper** with task, methods, datasets, and key result — making your library a structured research database, not just a pile of PDFs
 4. **Ranks new arXiv papers by relevance to YOUR library** — using what you've already read as an implicit interest profile
 5. **Generates cited literature syntheses** with contradiction detection and research gap identification
 6. **Analyzes skill gaps** against job descriptions using the same embedding pipeline — because the same person needs both features
+
+### 🔐 What leaves your machine
+
+Embedding and vector search run locally, but every LLM feature calls Groq's hosted API (`llama-3.3-70b-versatile`), so this text is sent to Groq:
+
+- **Auto-tagging** (`services/paper_tagger.py`): the title (first 300 characters) and the first 700 characters of the abstract of **every paper you save**.
+- **RAG chat and synthesis**: your question plus the retrieved chunks used to answer it.
+- **Job-description analysis** (`routes/jd_analyzer.py`): the job description and the resume text (first 3,000 characters of each).
+
+If you deploy the backend to Railway and use Qdrant Cloud, the library itself (paper text, metadata and embeddings) is stored with those cloud providers, not on your machine.
 
 ---
 
@@ -60,7 +70,7 @@ Every paper ingested (web scrape, PDF, or BibTeX) is automatically tagged by the
 Tags appear on paper cards and make your library a structured research database — not just a pile of saved links.
 
 ### 💬 RAG Chat over Your Private Library
-Ask natural-language questions across your entire paper collection. Answers are grounded in your specific papers with inline `[1]`, `[2]` citations — no hallucination, no generic web answers.
+Ask natural-language questions across your entire paper collection. The LLM is prompted to answer only from the retrieved chunks of your papers and to cite them inline as `[1]`, `[2]`. This reduces, but does not eliminate, hallucination: check answers against the cited sources.
 
 ### 📄 Full PDF Upload & Indexing
 Upload any PDF — including papers behind paywalls or unpublished preprints. Full text is extracted with PyMuPDF (not just the abstract), chunked with overlap, and embedded for deep retrieval.
@@ -131,11 +141,11 @@ The same embedding pipeline that powers paper retrieval also powers career intel
 | **Embeddings** | `BAAI/bge-base-en-v1.5` (768-dim) | Top MTEB retrieval score; asymmetric query/doc encoding |
 | **Vector DB** | Qdrant (Docker + Cloud) | Payload indexes, cosine similarity, async client |
 | **LLM** | Groq · `llama-3.3-70b-versatile` | Fast inference, free tier, JSON-structured outputs |
-| **PDF Parsing** | PyMuPDF | Fast, noise-aware text extraction with section detection |
+| **PDF Parsing** | PyMuPDF | Full-text extraction; the abstract is detected with a regex (no other section detection) |
 | **Extension** | Chrome MV3 · Vanilla JS | No build step; content scripts on 3 academic sites |
 | **Web UI** | nginx · Vanilla JS/CSS | Zero dependencies; drag-and-drop deploy to Netlify |
 | **Deployment** | Docker Compose · Railway | `railway.toml` included; single-command cloud deploy |
-| **Testing** | pytest · pytest-asyncio | 33 tests; all I/O mocked — runs without Docker or API keys |
+| **Testing** | pytest · pytest-asyncio | 35 tests; all I/O mocked — runs without Docker or API keys |
 
 ---
 
@@ -237,11 +247,11 @@ research-toolkit/
 │   │   ├── pdf_extractor.py        # PyMuPDF noise-aware extraction
 │   │   └── arxiv_client.py         # arXiv Atom API async client
 │   ├── models/schemas.py           # Pydantic v2 models with field validation
-│   ├── tests/                      # 33 pytest tests (all I/O mocked)
+│   ├── tests/                      # 35 pytest tests (all I/O mocked)
 │   │   ├── conftest.py             # Fixtures — no Docker/API keys needed
 │   │   ├── test_chunking.py        # 6 pure unit tests
-│   │   ├── test_jd.py              # 9 JD analyzer tests
-│   │   └── test_api.py             # 18 route integration tests
+│   │   ├── test_jd.py              # 10 JD analyzer tests
+│   │   └── test_api.py             # 19 route integration tests
 │   ├── requirements.txt
 │   └── Dockerfile                  # CPU-only torch; pre-bakes BGE model
 │
@@ -276,7 +286,7 @@ Full interactive docs at **http://localhost:8000/docs**
 | `POST` | `/api/papers/ingest` | Embed + store a scraped paper |
 | `POST` | `/api/papers/upload-pdf` | Upload and index a full PDF (25 MB max) |
 | `GET` | `/api/papers/list` | All saved papers (metadata) |
-| `GET` | `/api/papers/search?q=…` | Fast semantic search — no LLM, ~50 ms |
+| `GET` | `/api/papers/search?q=…` | Semantic search only — no LLM call (latency not benchmarked) |
 | `GET` | `/api/papers/count` | O(1) paper count via Qdrant native counter |
 | `DELETE` | `/api/papers/{id}` | Delete paper and all its chunks |
 | `POST` | `/api/papers/synthesize` | Literature synthesis + contradictions + gaps |
@@ -296,13 +306,7 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-```
-tests/test_chunking.py  ......          6 passed
-tests/test_jd.py        .........       9 passed
-tests/test_api.py       ..................  18 passed
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-33 passed in ~4s
-```
+The suite has 35 tests: 6 in `test_chunking.py`, 10 in `test_jd.py` and 19 in `test_api.py`.
 
 ---
 

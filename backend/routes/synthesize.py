@@ -68,7 +68,7 @@ async def synthesize_literature(req: SynthesisRequest):
 
     # Build numbered context block + deduplicated source list
     # Truncate each chunk to 400 chars so the total prompt stays within Groq's
-    # request payload limit (413 otherwise with 15 full 512-word chunks).
+    # request payload limit (413 otherwise with 15 full-length chunks).
     context_parts: list[str] = []
     seen_titles:   set[str]  = set()
     sources:       list[SourceRef] = []

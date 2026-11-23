@@ -22,7 +22,7 @@ async def semantic_search(
     Search saved papers by semantic similarity.
 
     Returns deduplicated papers (one entry per paper, best-matching chunk wins)
-    ranked by relevance score. Does NOT invoke the LLM — typically <100 ms.
+    ranked by relevance score. Does NOT invoke the LLM (latency not benchmarked).
     """
     chunks = await retrieve(q, top_k=top_k)
 
